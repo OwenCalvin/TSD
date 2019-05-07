@@ -1,0 +1,21 @@
+{
+  "name": "tsd",
+  "version": "1.0.0",
+  "description": "Create TS classes",
+  "main": "src/Main.ts",
+  "scripts": {
+    "start": "ts-node src/Main.ts"
+  },
+  "author": "Owen Calvin",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/glob": "^7.1.1",
+    "@types/node": "^12.0.0",
+    "ts-node": "^8.1.0",
+    "tslib": "^1.9.3",
+    "typescript": "^3.4.5"
+  },
+  "dependencies": {
+    "glob": "^7.1.3"
+  }
+}
