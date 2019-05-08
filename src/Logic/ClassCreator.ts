@@ -1,13 +1,12 @@
-import { ClassNode, TsCodeWriter, Decorator } from ".";
+import { ClassNode, TsCodeWriter } from ".";
 
-export class Writer {
+export class ClassCreator {
   GetClassContent(classNode: ClassNode) {
     const codeWriter = new TsCodeWriter();
     codeWriter
       .WriteImport(...classNode.Imports)
       .AddSpaceLine()
       .WriteClass(classNode);
-    console.log(codeWriter.Text);
     return codeWriter.Text;
   }
 }

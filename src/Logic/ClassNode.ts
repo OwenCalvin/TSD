@@ -7,6 +7,7 @@ export class ClassNode extends Node {
   private _fields: FieldNode[] = [];
   private _export: Boolean = true;
   private _isDefaultExport: boolean = false;
+  private _rawContent: string;
 
   get Path() {
     return this._path;
@@ -28,8 +29,22 @@ export class ClassNode extends Node {
     return this._export;
   }
 
+  get RawContent() {
+    return this._rawContent;
+  }
+
   SetExport(toExport: boolean) {
     this._export = toExport;
+    return this;
+  }
+
+  SetRawContent(content: string) {
+    this._rawContent = content;
+    return this;
+  }
+
+  SetPath(path: string) {
+    this._path = path;
     return this;
   }
 

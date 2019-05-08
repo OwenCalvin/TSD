@@ -30,7 +30,6 @@ export class TsCodeWriter extends CodeWriter {
             importDependency[1]
           );
       });
-      console.log(anImport.From);
       this.CloseBlock(`from ${str`${anImport.From}`}`);
     });
 

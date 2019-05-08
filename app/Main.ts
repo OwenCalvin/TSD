@@ -1,9 +1,10 @@
-import { TSD, ClassNode, Import, FieldNode, Decorator, Accessor, str } from ".";
+import { TSD, ClassNode, Import, FieldNode, Decorator, Accessor, str } from "../src";
+import { Glob } from "glob";
 
 const classNode = new ClassNode("Xo");
 const Toimport1 = new Import();
 const field = new FieldNode("yop");
-const decorator = new Decorator("Deco");
+const decorator = new Decorator(Glob.name);
 
 decorator
   .AddArgument(str`aaa`, 123, str`a`);
@@ -15,7 +16,7 @@ field
 
 Toimport1
   .SetFrom("./aa")
-  .SetImport("aaa", "aasdsd");
+  .AddImport("aaa", "aasdsd");
 
 classNode
   .AddImport(Toimport1)
@@ -23,6 +24,6 @@ classNode
   .AddDecorator(decorator);
 
 const tsd = new TSD();
-tsd
-  .SetTabSize(2)
-  .Write(`${__dirname}/Test.ts`, classNode);
+tsd.SetTabSize(2);
+tsd.Write(`${__dirname}/Test.ts`, classNode);
+tsd.Load(`${__dirname}/*.ts`);

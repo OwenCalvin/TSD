@@ -1,8 +1,10 @@
 export abstract class Named {
   private _name: string;
 
-  constructor(name: string) {
-    this.SetName(name);
+  constructor(name?: string) {
+    if (name) {
+      this.SetName(name);
+    }
   }
 
   get Name() {

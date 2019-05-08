@@ -283,7 +283,6 @@ export class CodeWriter {
   }
 
   private getCloseChar(char: string) {
-    console.log(char);
     return this._closingChars[char];
   }
 }

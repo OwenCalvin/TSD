@@ -1,11 +1,11 @@
-import * as Glob from "glob";
-import { ClassNode, Writer } from ".";
+import { ClassNode, ClassCreator, ClassLoader } from ".";
 import { writeFile } from "fs";
 
 export class TSD {
   private _tabSize: number;
   private _loadedClasses: ClassNode[];
-  private _writer: Writer = new Writer();
+  private _classCreator: ClassCreator = new ClassCreator();
+  private _classLoader: ClassLoader = new ClassLoader();
 
   get LoadedClassed() {
     return this._loadedClasses;
@@ -16,11 +16,12 @@ export class TSD {
   }
 
   Load(globPath: string) {
+    this._classLoader.ScanFiles(globPath);
   }
 
   Write(path: string, classNode: ClassNode) {
     return new Promise((resolve, reject) => {
-      const classContent = this._writer.GetClassContent(classNode);
+      const classContent = this._classCreator.GetClassContent(classNode);
       writeFile(
         path,
         classContent,

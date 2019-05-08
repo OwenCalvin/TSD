@@ -4,7 +4,7 @@
   "description": "Create TS classes",
   "main": "src/Main.ts",
   "scripts": {
-    "start": "ts-node src/Main.ts"
+    "start": "ts-node app/Main.ts"
   },
   "author": "Owen Calvin",
   "license": "MIT",

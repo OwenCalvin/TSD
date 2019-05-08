@@ -1,5 +1,5 @@
 export class Import {
-  private _default: boolean;
+  private _default?: string;
   private _imports: [string, string | undefined][] = [];
   private _from: string;
 
@@ -11,8 +11,19 @@ export class Import {
     return this._from;
   }
 
-  SetImport(importString: string, asImport?: string) {
+  get Default() {
+    return this._default;
+  }
+
+  AddImport(importString: string, asImport?: string) {
     this._imports.push([importString, asImport]);
+    return this;
+  }
+
+  SetDefault(importAs: string) {
+    if (importAs) {
+      this._default = importAs;
+    }
     return this;
   }
 
