@@ -1,5 +1,4 @@
-import { TSD, ClassNode, Import, FieldNode, Decorator, s } from "./Logic";
-import { Accessor } from "./Types";
+import { TSD, ClassNode, Import, FieldNode, Decorator, Accessor, str } from ".";
 
 const classNode = new ClassNode("Xo");
 const Toimport1 = new Import();
@@ -7,7 +6,7 @@ const field = new FieldNode("yop");
 const decorator = new Decorator("Deco");
 
 decorator
-  .AddArgument(s`aaa`, 123, s`a`);
+  .AddArgument(str`aaa`, 123, str`a`);
 
 field
   .AddAccessor(Accessor.PRIVATE)

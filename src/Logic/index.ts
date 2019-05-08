@@ -7,4 +7,4 @@ export * from "./Decorator";
 export * from "./CodeWriter";
 export * from "./Writer";
 export * from "./Import";
-export * from "./s";
+export * from "./TsCodeWriter";
