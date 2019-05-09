@@ -33,6 +33,11 @@ export class ClassNode extends Node {
     return this._rawContent;
   }
 
+  SetIsDefaultExport(isDefaultExport: boolean) {
+    this._isDefaultExport = isDefaultExport;
+    return this;
+  }
+
   SetExport(toExport: boolean) {
     this._export = toExport;
     return this;

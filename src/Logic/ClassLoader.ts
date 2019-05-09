@@ -14,16 +14,17 @@ export class ClassLoader {
   private _rgxFrom = /(?<=from")(.*)(?=")/gm;
   // https://regex101.com/r/ocToVj/1
   private _rgxSpaces = /\s+/gm;
-  private _loadedFiles: ClassNode[] = [];
+  // https://regex101.com/r/dGHElD/2
+  private _rgxExport = /(?<=export)\s*.[^{]*\s*(?={)/gm;
+  // https://regex101.com/r/vmvbHx/1
+  private _rgxClass = /(?<=class)\s*.*(?=\s)/gm;
 
   /**
    * Parse a class file to get the imports
    * @param classNode The class node intsance
    */
   GetImports(classNode: ClassNode) {
-    console.log(classNode.Path);
-
-    const imports = classNode.RawContent.match(this._rgxImport).map((anImport) => {
+    classNode.RawContent.match(this._rgxImport).map((anImport) => {
       const newImport = new Import();
       const normalizedImport = anImport.trim().replace(this._rgxSpaces, "");
       const from = normalizedImport.match(this._rgxFrom)[0];
@@ -41,36 +42,78 @@ export class ClassLoader {
         newImport.SetDefault(as[0]);
       }
 
-      console.log(newImport);
-      return classNode;
+      classNode.AddImport(newImport);
     });
 
     return classNode;
   }
 
+  /**
+   * TODO: [className, isExported, isExportedByDefault]
+   * @param rawContent
+   */
+  GetClassesInfos(rawContent: string) {
+    const matches = rawContent.match(this._rgxExport);
+    if (matches) {
+      return matches.reduce<[string, boolean][]>((prev, match) => {
+        const classes = match.match(this._rgxClass);
+        if (classes) {
+          return prev.concat(
+            classes.map((aClass) => [
+              aClass.trim(),
+              false
+            ])
+          );
+        }
+        return prev;
+      }, []);
+    }
+    return [];
+  }
+
   async ScanFiles(path: string) {
-    const readPromises: Promise<ClassNode>[] = [];
     const files = Glob.sync(path);
-    files.map((file) => {
-      const readPromise = new Promise<ClassNode>((resolve, reject) => {
+    const readPromises = files.reduce<Promise<ClassNode[]>[]>((prev, file) => {
+      const readPromise = new Promise<ClassNode[]>((resolve, reject) => {
         readFile(file, "utf8", (err, data) => {
           if (!err) {
-            const classNode = new ClassNode();
-            classNode
-              .SetPath(file)
-              .SetRawContent(data);
-            resolve(classNode);
+            const classes = this.GetClassesInfos(data).map((classInfos) => {
+              const classNode = new ClassNode();
+              classNode
+                .SetName(classInfos[0])
+                .SetIsDefaultExport(classInfos[1])
+                .SetPath(file)
+                .SetRawContent(data);
+              return classNode;
+            });
+            resolve(classes);
           } else {
             reject(err);
           }
         });
       });
-      readPromises.push(readPromise);
-    });
+      return [
+        ...prev,
+        readPromise
+      ];
+    }, []);
+
     const classNodes = await Promise.all(readPromises);
-    classNodes.map((classNode) => {
-      this.GetImports(classNode);
-    });
-    return classNodes;
+
+    const flatClassNodes = classNodes.reduce((prev, classNodes) => {
+      if (classNodes.length > 0) {
+        const classes = classNodes.map((classNode) => {
+          this.GetImports(classNode);
+          return classNode;
+        });
+        return [
+          ...prev,
+          ...classes
+        ];
+      }
+      return prev;
+    }, []);
+
+    return flatClassNodes;
   }
 }

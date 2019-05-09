@@ -26,4 +26,5 @@ classNode
 const tsd = new TSD();
 tsd.SetTabSize(2);
 tsd.Write(`${__dirname}/Test.ts`, classNode);
+tsd.Write(`${__dirname}/Test2.ts`, classNode);
 tsd.Load(`${__dirname}/*.ts`);

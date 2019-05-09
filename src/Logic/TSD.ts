@@ -9,10 +9,10 @@ import {
 export class TSD {
   private _tabSize: number;
   private _loadedClasses: ClassNode[];
-  private _classCreator: ClassCreator = new ClassCreator();
-  private _classLoader: ClassLoader = new ClassLoader();
+  private _classCreator: ClassCreator;
+  private _classLoader: ClassLoader;
 
-  get LoadedClassed() {
+  get LoadedClasses() {
     return this._loadedClasses;
   }
 
@@ -22,10 +22,12 @@ export class TSD {
 
   constructor(...libraryMaps: LibraryMap[]) {
     this._classCreator = new ClassCreator(...libraryMaps);
+    this._classLoader = new ClassLoader();
   }
 
-  Load(globPath: string) {
-    this._classLoader.ScanFiles(globPath);
+  async Load(globPath: string) {
+    const loadedFiles = await this._classLoader.ScanFiles(globPath);
+    console.log(loadedFiles);
   }
 
   Write(path: string, classNode: ClassNode) {
