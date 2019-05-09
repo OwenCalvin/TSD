@@ -1,5 +1,10 @@
-import { ClassNode, ClassCreator, ClassLoader } from ".";
 import { writeFile } from "fs";
+import {
+  ClassNode,
+  ClassCreator,
+  ClassLoader,
+  LibraryMap
+} from "..";
 
 export class TSD {
   private _tabSize: number;
@@ -13,6 +18,10 @@ export class TSD {
 
   get TabSize() {
     return this._tabSize;
+  }
+
+  constructor(...libraryMaps: LibraryMap[]) {
+    this._classCreator = new ClassCreator(...libraryMaps);
   }
 
   Load(globPath: string) {

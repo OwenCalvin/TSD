@@ -8,26 +8,30 @@ export class ClassLoader {
   private _rgxImport = /import(\s*)(({(.[^}]*)})|(\*\s*as.*))(\s*)from\s*".[^"]*"/gms;
   // https://regex101.com/r/ulP19G/1
   private _rgxImportAs = /(?<=import\*as)(.*)(?=from".[^"]*")/gm;
-  // https://regex101.com/r/Vl66Xb/1
-  private _rgxDependency = /(?<=import{)(.*)(?=})/gm;
+  // https://regex101.com/r/0thwyo/2
+  private _rgxDependency = /(?<={).[^}]*(?=})/gms;
   // https://regex101.com/r/CS9VuN/1
   private _rgxFrom = /(?<=from")(.*)(?=")/gm;
   // https://regex101.com/r/ocToVj/1
   private _rgxSpaces = /\s+/gm;
-
   private _loadedFiles: ClassNode[] = [];
 
+  /**
+   * Parse a class file to get the imports
+   * @param classNode The class node intsance
+   */
   GetImports(classNode: ClassNode) {
     console.log(classNode.Path);
+
     const imports = classNode.RawContent.match(this._rgxImport).map((anImport) => {
       const newImport = new Import();
-      const normalizedImport = anImport.replace(this._rgxSpaces, "");
+      const normalizedImport = anImport.trim().replace(this._rgxSpaces, "");
       const from = normalizedImport.match(this._rgxFrom)[0];
       const as = normalizedImport.match(this._rgxImportAs);
-      const dependencies = normalizedImport.match(this._rgxDependency);
-      if (dependencies) {
-        dependencies[0].split(",").map((dependency) => {
-          const dependencyParams = dependency.split(" as ");
+      const dependenciesStr = anImport.match(this._rgxDependency);
+      if (dependenciesStr) {
+        dependenciesStr[0].trim().split(",").map((dependency) => {
+          const dependencyParams = dependency.trim().split(" as ");
           newImport.AddImport(dependencyParams[0], dependencyParams[1]);
         });
       }
@@ -38,9 +42,10 @@ export class ClassLoader {
       }
 
       console.log(newImport);
-
       return classNode;
     });
+
+    return classNode;
   }
 
   async ScanFiles(path: string) {
