@@ -1,16 +1,18 @@
-import { writeFile } from "fs";
+import { writeFile, fstat, readFile } from "fs";
 import {
   ClassNode,
   ClassCreator,
   ClassLoader,
-  LibraryMap
+  LibraryMap,
+  IClassNode
 } from "..";
 
 export class TSD {
   private _tabSize: number;
-  private _loadedClasses: ClassNode[];
+  private _loadedClasses: ClassNode[] = [];
   private _classCreator: ClassCreator;
   private _classLoader: ClassLoader;
+  private _schemaFile: string = "./schema.json";
 
   get LoadedClasses() {
     return this._loadedClasses;
@@ -25,33 +27,67 @@ export class TSD {
     this._classLoader = new ClassLoader();
   }
 
-  async Load(globPath: string) {
-    const loadedFiles = await this._classLoader.ScanFiles(globPath);
-    console.log(loadedFiles);
+  async Load() {
+    const classNodes: IClassNode[] = JSON.parse(await this.readFile(this._schemaFile));
+    this._loadedClasses = ClassNode.parseObjects(classNodes);
   }
 
-  Write(path: string, classNode: ClassNode) {
-    return new Promise((resolve, reject) => {
-      const classContent = this._classCreator.GetClassContent(classNode);
-      writeFile(
+  async Write(classNode: ClassNode) {
+    if (classNode.Path) {
+      const classExists = this._loadedClasses.find((foundClassNode) =>
+        foundClassNode.Path === classNode.Path || foundClassNode.Name === classNode.Name
+      );
+      console.log(classExists);
+      if (!classExists) {
+        const classContent = this._classCreator.GetClassContent(classNode);
+        this._loadedClasses.push(classNode);
+        await this.writeFile(classNode.Path, classContent);
+        await this.writeFile(
+          this._schemaFile,
+          JSON.stringify(this._loadedClasses.map((loadedClass) => loadedClass.ToObject()))
+        );
+      } else {
+        throw new Error(`Class already exists: ${classNode.Name}`);
+      }
+    } else {
+      throw new Error(`Set a path to class: ${classNode.Name}`);
+    }
+  }
+
+  SetTabSize(tabSize: number) {
+    this._tabSize = tabSize;
+    return this;
+  }
+
+  private readFile(path: string) {
+    return new Promise<string>((resolve, reject) => {
+      readFile(
         path,
-        classContent,
-        (err) => {
+        "utf8",
+        (err, content) => {
           if (err) {
             reject(err);
           } else {
-            resolve(classContent);
+            resolve(content);
           }
         }
       );
     });
   }
 
-  ParseObject(obj: object) {
-  }
-
-  SetTabSize(tabSize: number) {
-    this._tabSize = tabSize;
-    return this;
+  private writeFile(path: string, content: string) {
+    return new Promise((resolve, reject) => {
+      writeFile(
+        path,
+        content,
+        (err) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(content);
+          }
+        }
+      );
+    });
   }
 }

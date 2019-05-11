@@ -1,20 +1,24 @@
+import {
+  FieldNode,
+  Import,
+  IClassNode,
+  IExportRules,
+  Decorator
+} from "..";
 import { Node } from "./Node";
-import { FieldNode, Import } from ".";
 
-export class ClassNode extends Node {
-  private _path: String;
+export class ClassNode extends Node implements IClassNode {
+  private _path: string;
   private _imports: Import[] = [];
   private _fields: FieldNode[] = [];
-  private _export: Boolean = true;
-  private _isDefaultExport: boolean = false;
+  private _export: IExportRules = {
+    default: false,
+    export: true
+  };
   private _rawContent: string;
 
   get Path() {
     return this._path;
-  }
-
-  get IsDefaultExport() {
-    return this._isDefaultExport;
   }
 
   get Imports() {
@@ -33,13 +37,35 @@ export class ClassNode extends Node {
     return this._rawContent;
   }
 
-  SetIsDefaultExport(isDefaultExport: boolean) {
-    this._isDefaultExport = isDefaultExport;
+  static parseObjects(objs: IClassNode[]) {
+    return super.genericParseObjects(ClassNode, objs);
+  }
+
+  ToObject(): IClassNode {
+    return {
+      Name: this.Name,
+      Path: this.Path,
+      Export: this.Export,
+      RawContent: this.RawContent,
+      Fields: this.Fields.map((field) => field.ToObject()),
+      Imports: this.Imports.map((anImport) => anImport.ToObject()),
+      Decorators: this.Decorators.map((decorator) => decorator.ToObject())
+    };
+  }
+
+  ParseObject(obj: IClassNode) {
+    this
+      .SetExport(obj.Export)
+      .SetName(obj.Name)
+      .SetPath(obj.Path)
+      .AddField(...FieldNode.parseObjects(obj.Fields))
+      .AddDecorator(...Decorator.parseObjects(obj.Decorators));
+
     return this;
   }
 
-  SetExport(toExport: boolean) {
-    this._export = toExport;
+  SetExport(exportRules: IExportRules) {
+    this._export = exportRules;
     return this;
   }
 
@@ -61,8 +87,8 @@ export class ClassNode extends Node {
     return this.removeFromArray(this._imports, importClassNode);
   }
 
-  AddField(field: FieldNode) {
-    return this.addToArray(this._fields, field);
+  AddField(...fields: FieldNode[]) {
+    return this.addToArray(this._fields, ...fields);
   }
 
   RemoveField(field: FieldNode) {

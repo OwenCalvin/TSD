@@ -1,6 +1,6 @@
 import * as Glob from "glob";
 import { readFile } from "fs";
-import { ClassNode, Import } from ".";
+import { ClassNode, Import, IExportRules } from "..";
 
 export class ClassLoader {
   // I've created a few regex matches
@@ -14,10 +14,12 @@ export class ClassLoader {
   private _rgxFrom = /(?<=from")(.*)(?=")/gm;
   // https://regex101.com/r/ocToVj/1
   private _rgxSpaces = /\s+/gm;
-  // https://regex101.com/r/dGHElD/2
-  private _rgxExport = /(?<=export)\s*.[^{]*\s*(?={)/gm;
-  // https://regex101.com/r/vmvbHx/1
-  private _rgxClass = /(?<=class)\s*.*(?=\s)/gm;
+  // https://regex101.com/r/qtb8KA/1
+  private _rgxLines = /(\n|\r\n|\s{1,})+/gm;
+  // https://regex101.com/r/uUbmqn/5
+  private _rgxDeclaration = /(@.[^(]*\(.[^)]*\)\s*)*(export|)(\s{1,}default|)\s{1,}(class|interface|let|const|type)\s{1,}.[^{;\r\n]*\s*(?={|;|\n|\r\n)/gms;
+  // https://regex101.com/r/bSb2yW/2
+  private _rgxClass = /(?<=class)\s{1,}.*\s*(?=)/gm;
 
   /**
    * Parse a class file to get the imports
@@ -33,11 +35,11 @@ export class ClassLoader {
       if (dependenciesStr) {
         dependenciesStr[0].trim().split(",").map((dependency) => {
           const dependencyParams = dependency.trim().split(" as ");
-          newImport.AddImport(dependencyParams[0], dependencyParams[1]);
+          newImport.AddImport([dependencyParams[0], dependencyParams[1]]);
         });
       }
 
-      newImport.SetFrom(from);
+      newImport.SetName(from);
       if (as) {
         newImport.SetDefault(as[0]);
       }
@@ -53,17 +55,27 @@ export class ClassLoader {
    * @param rawContent
    */
   GetClassesInfos(rawContent: string) {
-    const matches = rawContent.match(this._rgxExport);
-    if (matches) {
-      return matches.reduce<[string, boolean][]>((prev, match) => {
-        const classes = match.match(this._rgxClass);
-        if (classes) {
-          return prev.concat(
-            classes.map((aClass) => [
-              aClass.trim(),
-              false
-            ])
-          );
+    const declarations = rawContent.match(this._rgxDeclaration);
+    if (declarations) {
+      return declarations.reduce<[string, IExportRules][]>((prev, declaration) => {
+        const pureDeclaration = declaration.trim().replace(this._rgxLines, " ");
+        if (pureDeclaration) {
+          const classes = pureDeclaration.trim().match(this._rgxClass);
+          if (classes) {
+            const className = classes[0].trim();
+            const params = pureDeclaration.split(" ");
+            console.log(params);
+            return [
+              ...prev,
+              [
+                className,
+                {
+                  default: params.includes("default"),
+                  export: params.includes("export")
+                }
+              ]
+            ];
+          }
         }
         return prev;
       }, []);
@@ -81,7 +93,7 @@ export class ClassLoader {
               const classNode = new ClassNode();
               classNode
                 .SetName(classInfos[0])
-                .SetIsDefaultExport(classInfos[1])
+                .SetExport(classInfos[1])
                 .SetPath(file)
                 .SetRawContent(data);
               return classNode;

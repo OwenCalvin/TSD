@@ -165,6 +165,13 @@ export class CodeWriter {
     return this;
   }
 
+  WriteLineCond(cond: (texts: string[]) => any, ...texts: string[]) {
+    this
+      .WriteCond(cond, ...texts)
+      .AddNewLine();
+    return this;
+  }
+
   CofirmLine() {
     this.WriteSemicolon();
   }

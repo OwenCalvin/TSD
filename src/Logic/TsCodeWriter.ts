@@ -5,7 +5,7 @@ export class TsCodeWriter extends CodeWriter {
   WriteClass(classNode: ClassNode) {
     this.WriteDecorators(classNode.Decorators);
     this.StartBlock(
-      `${classNode.Export ? "export " : ""}${classNode.IsDefaultExport ? " default" : ""}class ${classNode.Name}`
+      `${classNode.Export.export ? "export " : ""}${classNode.Export.default ? " default" : ""}class ${classNode.Name}`
     );
     classNode.Fields.map((field) => {
       this
@@ -18,9 +18,9 @@ export class TsCodeWriter extends CodeWriter {
   }
 
   WriteImport(...imports: Import[]) {
-    imports.map((anImport) => {
+    imports.map((anImport, index) => {
       this.StartBlock("import");
-      anImport.Imports.map((importDependency) => {
+      anImport.Imports.map((importDependency, index) => {
         this
           .DisableSemicolon()
           .Write(importDependency[0])
@@ -29,8 +29,17 @@ export class TsCodeWriter extends CodeWriter {
             space`as`,
             importDependency[1]
           );
+        if (anImport.Imports[index + 1]) {
+          this
+            .Ident()
+            .Write(",")
+            .AddNewLine();
+        }
       });
-      this.CloseBlock(`from ${str`${anImport.From}`}`);
+      this.CloseBlock(`from ${str`${anImport.Name}`}`);
+      if (imports[index + 1]) {
+        this.AddNewLine();
+      }
     });
 
     return this;

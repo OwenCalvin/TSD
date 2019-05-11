@@ -127,7 +127,7 @@
     ],
     "max-line-length": [
       true,
-      150
+      200
     ],
     "block-spacing": [
       true,

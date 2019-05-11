@@ -1,34 +1,41 @@
-export class Import {
+import { IImport } from "..";
+import { Named } from "./Named";
+
+export class Import extends Named implements IImport {
   private _default?: string;
   private _imports: [string, string | undefined][] = [];
-  private _from: string;
 
   get Imports() {
-    return this._imports as ReadonlyArray<ReadonlyArray<string>>;
-  }
-
-  get From() {
-    return this._from;
+    return this._imports as ReadonlyArray<[string, string | undefined]>;
   }
 
   get Default() {
     return this._default;
   }
 
-  AddImport(importString: string, asImport?: string) {
-    this._imports.push([importString, asImport]);
-    return this;
+  ToObject(): IImport {
+    return {
+      Default: this.Default,
+      Name: this.Name,
+      Imports: this.Imports
+    };
+  }
+
+  ParseObject(obj: Import) {
+    this
+      .SetDefault(obj.Default)
+      .SetName(obj.Name)
+      .AddImport(...obj.Imports);
+  }
+
+  AddImport(...importInfos: [string, string?][]) {
+    return this.addToArray(this._imports, ...importInfos);
   }
 
   SetDefault(importAs: string) {
     if (importAs) {
       this._default = importAs;
     }
-    return this;
-  }
-
-  SetFrom(from: string) {
-    this._from = from;
     return this;
   }
 }
