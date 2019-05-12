@@ -49,13 +49,17 @@ export class TSD {
       this._loadedClasses.push(classNode);
       classNode.AddImport(...this.getFieldImports(classNode));
       await this.writeFile(classNode.Path, classNode.Content);
-      await this.writeFile(
-        this._schemaFile,
-        JSON.stringify(this._loadedClasses.map((loadedClass) => loadedClass.ToObject()))
-      );
+      return await this.PersistLoadedClasses();
     } else {
       throw new Error(`Set a path to class: ${classNode.Name}`);
     }
+  }
+
+  async PersistLoadedClasses() {
+    return await this.writeFile(
+      this._schemaFile,
+      JSON.stringify(this._loadedClasses.map((loadedClass) => loadedClass.ToObject()))
+    );
   }
 
   SetTabSize(tabSize: number) {
@@ -112,7 +116,7 @@ export class TSD {
   }
 
   private writeFile(path: string, content: string) {
-    return new Promise((resolve, reject) => {
+    return new Promise<string>((resolve, reject) => {
       writeFile(
         path,
         content,
