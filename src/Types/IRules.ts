@@ -1,12 +1,12 @@
 import {
   IExportRules,
-  LibraryMap,
-  Decorator
+  Decorator,
+  IImport
 } from "..";
 
 export interface IRules {
   exportRules: IExportRules;
-  imports: LibraryMap[];
+  imports: IImport[];
   classDecorators: Decorator[];
   fieldDecorators: Decorator[];
 }

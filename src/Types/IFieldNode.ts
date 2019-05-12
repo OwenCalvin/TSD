@@ -7,4 +7,6 @@ export interface IFielNode extends INode {
   Accessors: Accessor[];
   TypeName: string;
   DefaultValue: any;
+  IsArray: boolean;
+  IsNullable: boolean;
 }

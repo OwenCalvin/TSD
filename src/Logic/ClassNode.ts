@@ -1,11 +1,13 @@
+
+import { Node } from "./Node";
 import {
   FieldNode,
   Import,
   IClassNode,
   IExportRules,
-  Decorator
+  Decorator,
+  TsCodeWriter
 } from "..";
-import { Node } from "./Node";
 
 export class ClassNode extends Node implements IClassNode {
   private _path: string;
@@ -15,7 +17,6 @@ export class ClassNode extends Node implements IClassNode {
     default: false,
     export: true
   };
-  private _rawContent: string;
 
   get Path() {
     return this._path;
@@ -33,8 +34,12 @@ export class ClassNode extends Node implements IClassNode {
     return this._export;
   }
 
-  get RawContent() {
-    return this._rawContent;
+  get Content() {
+    const codeWriter = new TsCodeWriter();
+    codeWriter
+      .WriteImport(...this.Imports)
+      .WriteClass(this);
+    return codeWriter.Text;
   }
 
   static parseObjects(objs: IClassNode[]) {
@@ -46,7 +51,6 @@ export class ClassNode extends Node implements IClassNode {
       Name: this.Name,
       Path: this.Path,
       Export: this.Export,
-      RawContent: this.RawContent,
       Fields: this.Fields.map((field) => field.ToObject()),
       Imports: this.Imports.map((anImport) => anImport.ToObject()),
       Decorators: this.Decorators.map((decorator) => decorator.ToObject())
@@ -66,11 +70,6 @@ export class ClassNode extends Node implements IClassNode {
 
   SetExport(exportRules: IExportRules) {
     this._export = exportRules;
-    return this;
-  }
-
-  SetRawContent(content: string) {
-    this._rawContent = content;
     return this;
   }
 

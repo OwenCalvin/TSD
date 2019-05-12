@@ -13,24 +13,23 @@ decorator
 field
   .AddAccessor(Accessor.PRIVATE)
   .AddDecorator(decorator)
-  .SetTypeName("string");
+  .SetType("Xo2")
+  .SetIsArray(true)
+  .SetIsNullable(true);
 
 Toimport1
   .SetName("./aa")
   .AddImport(["aaa", "aasdsd"], ["aaw213"]);
 
 classNode
-  .AddImport(Toimport1)
   .AddField(field)
   .SetPath(`${__dirname}/Test.ts`)
   .AddDecorator(decorator)
   .AddDecorator(decorator);
 
 classNode2
-  .AddImport(Toimport1)
-  .AddImport(Toimport1)
   .AddField(field)
-  .SetPath(`${__dirname}/Test2.ts`)
+  .SetPath(`${__dirname}/aaa/Test2.ts`)
   .AddDecorator(decorator);
 
 const tsd = new TSD();

@@ -39,6 +39,8 @@ export class TsCodeWriter extends CodeWriter {
       this.CloseBlock(`from ${str`${anImport.Name}`}`);
       if (imports[index + 1]) {
         this.AddNewLine();
+      } else {
+        this.AddSpaceLine();
       }
     });
 
@@ -81,10 +83,20 @@ export class TsCodeWriter extends CodeWriter {
   WriteField(field: FieldNode) {
     this
       .Write(`${field.Accessors.join(" ")} `)
-      .WriteTyped(field.Name, field.TypeName);
+      .WriteTyped(
+        field.Name,
+        field.TypeName,
+        field.IsArray,
+        field.IsNullable
+      );
   }
 
-  WriteTyped(name: string, typeName: string) {
-    return this.Write(`${name}: ${typeName}`);
+  WriteTyped(
+    name: string,
+    typeName: string,
+    isArray: boolean,
+    isNullable: boolean
+  ) {
+    return this.Write(`${name}${isNullable ? "?" : ""}: ${typeName}${isArray ? "[]" : ""}`);
   }
 }

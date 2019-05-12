@@ -1,17 +1,22 @@
-import { writeFile, fstat, readFile } from "fs";
+import {
+  relative,
+  dirname,
+  parse
+} from "path";
+import {
+  writeFile,
+  readFile,
+  readFileSync
+} from "fs";
 import {
   ClassNode,
-  ClassCreator,
-  ClassLoader,
-  LibraryMap,
-  IClassNode
+  IClassNode,
+  Import
 } from "..";
 
 export class TSD {
   private _tabSize: number;
   private _loadedClasses: ClassNode[] = [];
-  private _classCreator: ClassCreator;
-  private _classLoader: ClassLoader;
   private _schemaFile: string = "./schema.json";
 
   get LoadedClasses() {
@@ -22,33 +27,32 @@ export class TSD {
     return this._tabSize;
   }
 
-  constructor(...libraryMaps: LibraryMap[]) {
-    this._classCreator = new ClassCreator(...libraryMaps);
-    this._classLoader = new ClassLoader();
+  constructor() {
+    this.Load();
   }
 
   async Load() {
-    const classNodes: IClassNode[] = JSON.parse(await this.readFile(this._schemaFile));
+    const classNodes: IClassNode[] = JSON.parse(
+      readFileSync(this._schemaFile, "utf8")
+    );
     this._loadedClasses = ClassNode.parseObjects(classNodes);
   }
 
   async Write(classNode: ClassNode) {
     if (classNode.Path) {
-      const classExists = this._loadedClasses.find((foundClassNode) =>
+      const classExistsIndex = this._loadedClasses.findIndex((foundClassNode) =>
         foundClassNode.Path === classNode.Path || foundClassNode.Name === classNode.Name
       );
-      console.log(classExists);
-      if (!classExists) {
-        const classContent = this._classCreator.GetClassContent(classNode);
-        this._loadedClasses.push(classNode);
-        await this.writeFile(classNode.Path, classContent);
-        await this.writeFile(
-          this._schemaFile,
-          JSON.stringify(this._loadedClasses.map((loadedClass) => loadedClass.ToObject()))
-        );
-      } else {
-        throw new Error(`Class already exists: ${classNode.Name}`);
+      if (classExistsIndex > -1) {
+        this._loadedClasses.splice(classExistsIndex, 1);
       }
+      this._loadedClasses.push(classNode);
+      classNode.AddImport(...this.getFieldImports(classNode));
+      await this.writeFile(classNode.Path, classNode.Content);
+      await this.writeFile(
+        this._schemaFile,
+        JSON.stringify(this._loadedClasses.map((loadedClass) => loadedClass.ToObject()))
+      );
     } else {
       throw new Error(`Set a path to class: ${classNode.Name}`);
     }
@@ -57,6 +61,38 @@ export class TSD {
   SetTabSize(tabSize: number) {
     this._tabSize = tabSize;
     return this;
+  }
+
+  private getFieldImports(classNode: ClassNode) {
+    return classNode.Fields.reduce<Import[]>((prev, field) => {
+      const relation = this._loadedClasses.find((loadedClass) =>
+        loadedClass.Name === field.TypeName && loadedClass.Name !== classNode.Name
+      );
+      if (relation) {
+        const importPathInfos = parse(
+          relative(
+            dirname(classNode.Path),
+            relation.Path
+          )
+        );
+        const importPath = `./${importPathInfos.dir}/${importPathInfos.name}`;
+        const importExists = classNode.Imports.find((foundImport) =>
+          foundImport.Name === importPath
+        );
+        if (!importExists) {
+          const newImport = new Import();
+          newImport
+            .SetName(importPath)
+            .AddImport([relation.Name]);
+
+          return [
+            ...prev,
+            newImport
+          ];
+        }
+      }
+      return prev;
+    }, []);
   }
 
   private readFile(path: string) {

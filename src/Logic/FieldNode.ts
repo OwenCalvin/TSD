@@ -4,6 +4,8 @@ import { Accessor, IFielNode } from "..";
 export class FieldNode extends Node implements IFielNode {
   private _accessors: Accessor[] = [];
   private _typeName: string;
+  private _isArray: boolean;
+  private _isNullable: boolean;
   private _defaultValue?: any;
 
   get Accessors() {
@@ -18,6 +20,14 @@ export class FieldNode extends Node implements IFielNode {
     return this._defaultValue;
   }
 
+  get IsArray() {
+    return this._isArray;
+  }
+
+  get IsNullable() {
+    return this._isNullable;
+  }
+
   static parseObjects(objs: ArrayLike<IFielNode>) {
     return super.genericParseObjects(FieldNode, objs);
   }
@@ -28,7 +38,9 @@ export class FieldNode extends Node implements IFielNode {
       TypeName: this.TypeName,
       Accessors: this.Accessors,
       DefaultValue: this.DefaultValue,
-      Decorators: this.Decorators.map((decorator) => decorator.ToObject())
+      Decorators: this.Decorators.map((decorator) => decorator.ToObject()),
+      IsNullable: this._isNullable,
+      IsArray: this._isArray
     };
   }
 
@@ -36,15 +48,25 @@ export class FieldNode extends Node implements IFielNode {
     this
       .SetName(obj.Name)
       .SetDefaultValue(obj.DefaultValue)
-      .SetTypeName(obj.TypeName)
+      .SetType(obj.TypeName)
       .AddAccessor(...obj.Accessors)
       .AddDecorator();
 
     return this;
   }
 
-  SetTypeName(typeName: string) {
-    this._typeName = typeName;
+  SetType(type: string | Function) {
+    this._typeName = typeof type === "string" ? type : type.name;
+    return this;
+  }
+
+  SetIsArray(isArray: boolean) {
+    this._isArray = isArray;
+    return this;
+  }
+
+  SetIsNullable(isNullable: boolean) {
+    this._isNullable = isNullable;
     return this;
   }
 

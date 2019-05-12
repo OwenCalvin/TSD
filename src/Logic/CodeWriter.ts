@@ -245,12 +245,12 @@ export class CodeWriter {
     if (this._semicolonEnabled) {
       this._text += ";";
     }
-    return this;
+    return this.commit();
   }
 
   AddSpaces(size: number) {
     this._text += getSpaces(size);
-    return this;
+    return this.commit();
   }
 
   WriteSuffix() {
@@ -278,14 +278,16 @@ export class CodeWriter {
     this.Ident();
     this._text += text;
 
+    return this.commit();
+  }
+
+  private commit() {
     if (this._forNextLine) {
       const currentText = this._text;
       this.LoadConfig(this._savedConfig);
       this._text = currentText;
     }
-
     this._newLined = false;
-
     return this;
   }
 
